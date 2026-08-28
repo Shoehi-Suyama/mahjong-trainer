@@ -375,6 +375,68 @@ button {
 .ta-time { font-size: 1.15rem; }
 .ta-time.danger { color: var(--accent); }
 
+/* ---- モーダル（点数早見表など） ---- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px 6px;
+}
+.modal-panel {
+  background: var(--bg);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--primary);
+  color: var(--primary-fg);
+  font-weight: 700;
+}
+.modal-head button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: inherit;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.modal-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.modal-body .screen { padding-top: 10px; }
+
+.appbar-title {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tsumo-cell {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  font-size: 0.8rem;
+}
+.score-table small { color: #777; font-size: 0.72rem; }
+
 /* ---- 設定 ---- */
 .setting-row {
   display: flex;

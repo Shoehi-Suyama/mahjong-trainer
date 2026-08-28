@@ -66,19 +66,33 @@ export default function Explanation({ result: r, oya, tsumo }: ExplanationProps)
         </li>
         {(() => {
           const hasExtra = r.score.honba > 0 || r.score.kyotaku > 0;
+          const p = r.score.payment;
+          let payLine: string;
+          if (p.type === 'ron') {
+            payLine = `${p.amount.toLocaleString()}点`;
+          } else if (p.oya == null) {
+            // 親ツモ: 子3人が同額
+            payLine = `子はそれぞれ ${p.ko.toLocaleString()}点`;
+          } else {
+            // 子ツモ: 他の子2人と親
+            payLine = `子はそれぞれ ${p.ko.toLocaleString()}点 ／ 親は ${p.oya.toLocaleString()}点`;
+          }
           const tsumoTotal =
-            r.score.payment.type === 'tsumo'
+            p.type === 'tsumo'
               ? `（${hasExtra ? '素点' : '合計'} ${r.score.baseTotal.toLocaleString()}点）`
               : '';
           return (
             <>
               <li className={hasExtra ? '' : 'total-line'}>
-                {r.score.display}
+                {payLine}
                 {tsumoTotal}
               </li>
               {r.score.honba > 0 && (
                 <li>
-                  ＋ {r.score.honba}本場　{tsumo ? `各${r.score.honba * 100}点（計 ${r.score.honba * 300}点）` : `${r.score.honba * 300}点`}
+                  ＋ {r.score.honba}本場
+                  {tsumo
+                    ? `各家 +${r.score.honba * 100}点（計 ${r.score.honba * 300}点）`
+                    : `${r.score.honba * 300}点`}
                 </li>
               )}
               {r.score.kyotaku > 0 && <li>＋ 供託　{(r.score.kyotaku * 1000).toLocaleString()}点</li>}

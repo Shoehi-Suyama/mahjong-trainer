@@ -1,26 +1,40 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { calculateScore } from '../core/score';
 
 const FUS = [20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110];
 const HANS = [1, 2, 3, 4];
 
-function cell(han: number, fu: number, oya: boolean, tsumo: boolean): string {
+function cell(han: number, fu: number, oya: boolean, tsumo: boolean): ReactNode {
   // 存在しない組合せ
   if (fu === 20 && !tsumo && han <= 4) return '—'; // 20符ロンは無い（平和ツモ専用）
   if (fu === 25 && han === 1) return '—'; // 七対子は2翻以上
   const r = calculateScore({ han, fu, oya, tsumo });
-  if (tsumo) return r.display;
-  return r.total.toLocaleString();
+  if (!tsumo) return r.total.toLocaleString();
+
+  const p = r.payment;
+  if (p.type !== 'tsumo') return r.total.toLocaleString();
+  if (p.oya == null) {
+    // 親ツモ: 子3人が同額
+    return `${p.ko.toLocaleString()}オール`;
+  }
+  // 子ツモ: 他の子2人が p.ko、親が p.oya
+  return (
+    <span className="tsumo-cell">
+      <span>子 {p.ko.toLocaleString()}</span>
+      <span>親 {p.oya.toLocaleString()}</span>
+    </span>
+  );
 }
 
-const LIMITS: [string, number, number, number, number][] = [
-  // ラベル, 子ロン, 子ツモ合計, 親ロン, 親ツモ合計
-  ['満貫', 8000, 8000, 12000, 12000],
-  ['跳満', 12000, 12000, 18000, 18000],
-  ['倍満', 16000, 16000, 24000, 24000],
-  ['三倍満', 24000, 24000, 36000, 36000],
-  ['役満', 32000, 32000, 48000, 48000],
+// ラベル, 基本点
+const LIMITS: [string, number][] = [
+  ['満貫', 2000],
+  ['跳満', 3000],
+  ['倍満', 4000],
+  ['三倍満', 6000],
+  ['役満', 8000],
 ];
+const c100 = (n: number) => Math.ceil(n / 100) * 100;
 
 export default function ScoreTable() {
   const [oya, setOya] = useState(false);
@@ -39,7 +53,12 @@ export default function ScoreTable() {
       <div className="card table-scroll">
         <table className="score-table">
           <caption>
-            {oya ? '親' : '子'}・{tsumo ? 'ツモ（支払い内訳／親ツモはオール）' : 'ロン（和了点）'}
+            {oya ? '親' : '子'}・
+            {tsumo
+              ? oya
+                ? 'ツモ（子3人がそれぞれ支払う点数）'
+                : 'ツモ（他の子 / 親 がそれぞれ支払う点数）'
+              : 'ロン（和了点）'}
           </caption>
           <thead>
             <tr>
@@ -64,26 +83,43 @@ export default function ScoreTable() {
 
       <div className="card table-scroll">
         <table className="score-table">
-          <caption>満貫以上</caption>
+          <caption>満貫以上（ツモは合計。かっこ内は 子 / 親 の支払い）</caption>
           <thead>
             <tr>
               <th></th>
               <th>子ロン</th>
-              <th>子ツモ計</th>
+              <th>子ツモ</th>
               <th>親ロン</th>
-              <th>親ツモ計</th>
+              <th>親ツモ</th>
             </tr>
           </thead>
           <tbody>
-            {LIMITS.map(([label, kr, kt, or, ot]) => (
-              <tr key={label}>
-                <th>{label}</th>
-                <td>{kr.toLocaleString()}</td>
-                <td>{kt.toLocaleString()}</td>
-                <td>{or.toLocaleString()}</td>
-                <td>{ot.toLocaleString()}</td>
-              </tr>
-            ))}
+            {LIMITS.map(([label, base]) => {
+              const koRon = c100(base * 4);
+              const oyaRon = c100(base * 6);
+              const koTsumoKo = c100(base * 1);
+              const koTsumoOya = c100(base * 2);
+              const oyaTsumoEach = c100(base * 2);
+              return (
+                <tr key={label}>
+                  <th>{label}</th>
+                  <td>{koRon.toLocaleString()}</td>
+                  <td>
+                    {(koTsumoKo * 2 + koTsumoOya).toLocaleString()}
+                    <br />
+                    <small>
+                      ({koTsumoKo.toLocaleString()} / {koTsumoOya.toLocaleString()})
+                    </small>
+                  </td>
+                  <td>{oyaRon.toLocaleString()}</td>
+                  <td>
+                    {(oyaTsumoEach * 3).toLocaleString()}
+                    <br />
+                    <small>({oyaTsumoEach.toLocaleString()}オール)</small>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
