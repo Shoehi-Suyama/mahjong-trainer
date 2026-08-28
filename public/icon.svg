@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="麻雀 点数計算トレーナー">
+  <rect width="512" height="512" fill="#1e7a46"/>
+  <g>
+    <rect x="98" y="82" width="316" height="348" rx="38" fill="#faf8f1"/>
+    <rect x="98.5" y="82.5" width="315" height="347" rx="37.5" fill="none" stroke="#d7d2c1" stroke-width="5"/>
+    <path d="M98 388v4a38 38 0 0 0 38 38h240a38 38 0 0 0 38-38v-4z" fill="#000" opacity="0.07"/>
+    <text x="256" y="258" text-anchor="middle" dominant-baseline="central"
+      font-family="'Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','Noto Sans JP',sans-serif"
+      font-size="248" font-weight="800" fill="#b1352b">点</text>
+  </g>
+</svg>
