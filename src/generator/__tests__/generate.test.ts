@@ -121,6 +121,21 @@ describe('追加役が出題に現れる', () => {
       expect(p.uraIndicators).toHaveLength(0);
     }
   });
+
+  it('extras:false は本場・供託だけ無効化し、赤ドラ・裏ドラは残る（点数=素点）', () => {
+    let akaSeen = 0;
+    for (const level of [3, 4, 5]) {
+      for (let i = 0; i < 120; i++) {
+        const p = generateScoreProblem(level, level * 4242 + i, { extras: false });
+        expect(p.honba).toBe(0);
+        expect(p.kyotaku).toBe(0);
+        // 本場・供託を含まないので 収入合計 = 素点
+        expect(p.result.score.total).toBe(p.result.score.baseTotal);
+        if (p.akaTiles.length > 0) akaSeen++;
+      }
+    }
+    expect(akaSeen).toBeGreaterThan(0); // 赤ドラは出る
+  });
 });
 
 describe('scoreChoices', () => {

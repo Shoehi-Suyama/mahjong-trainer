@@ -6,14 +6,17 @@ import { useStats } from './useStats';
 
 const LEVELS = [1, 2, 3, 4, 5, 6];
 
+// 本場・供託は入れず、符×翻の純粋な点数だけを問う
+const OPTS = { extras: false } as const;
+
 export default function ScoreQuiz() {
   const { stats, record } = useStats();
   const [level, setLevel] = useState(1);
-  const [problem, setProblem] = useState<Problem>(() => generateScoreProblem(1));
+  const [problem, setProblem] = useState<Problem>(() => generateScoreProblem(1, undefined, OPTS));
 
   function next(l = level) {
     setLevel(l);
-    setProblem(generateScoreProblem(l));
+    setProblem(generateScoreProblem(l, undefined, OPTS));
   }
 
   return (

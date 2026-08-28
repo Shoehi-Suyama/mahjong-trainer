@@ -4,11 +4,13 @@ import { calculateScore } from '../core/score';
 const FUS = [20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110];
 const HANS = [1, 2, 3, 4];
 
+const n = (v: number) => v.toLocaleString();
+
 function tsumoStr(han: number, fu: number, oya: boolean): string {
   const p = calculateScore({ han, fu, oya, tsumo: true }).payment;
   if (p.type !== 'tsumo') return '';
-  if (p.oya == null) return `${p.ko}`; // 親ツモ：各家同額
-  return `${p.ko}/${p.oya}`; // 子ツモ：小さい方が子・大きい方が親
+  if (p.oya == null) return n(p.ko); // 親ツモ：各家同額
+  return `${n(p.ko)} / ${n(p.oya)}`; // 子ツモ：小さい方が子・大きい方が親
 }
 
 function cell(han: number, fu: number, oya: boolean): ReactNode {
@@ -16,7 +18,7 @@ function cell(han: number, fu: number, oya: boolean): ReactNode {
   const ron = fu === 20 ? null : calculateScore({ han, fu, oya, tsumo: false }).total;
   return (
     <div className="pt-cell">
-      <span className="pt-ron">{ron == null ? '—' : ron}</span>
+      <span className="pt-ron">{ron == null ? '—' : n(ron)}</span>
       <span className="pt-tsumo">{tsumoStr(han, fu, oya)}</span>
     </div>
   );
@@ -83,12 +85,12 @@ export default function ScoreTable() {
             {LIMITS.map(([label, base]) => {
               const ron = c100(base * (oya ? 6 : 4));
               const tsu = oya
-                ? `${c100(base * 2)}`
-                : `${c100(base * 1)}/${c100(base * 2)}`;
+                ? n(c100(base * 2))
+                : `${n(c100(base * 1))} / ${n(c100(base * 2))}`;
               return (
                 <tr key={label}>
                   <th>{label}</th>
-                  <td>{ron.toLocaleString()}</td>
+                  <td>{n(ron)}</td>
                   <td>{tsu}</td>
                 </tr>
               );

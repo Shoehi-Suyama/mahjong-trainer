@@ -15,6 +15,9 @@ export interface WeakTag {
   total: number;
 }
 
+// 苦手問題では出題しないタグ（本場・供託は点数計算問題では扱わない）
+const EXCLUDED_TAGS = new Set(['honba', 'kyotaku']);
+
 /** サンプル数が十分で正答率が低いタグを、低い順に返す。 */
 export function pickWeakTags(
   byTag: Record<string, TagStatLike>,
@@ -22,7 +25,7 @@ export function pickWeakTags(
   threshold = 0.75,
 ): WeakTag[] {
   return Object.entries(byTag)
-    .filter(([, s]) => s.total >= minSamples)
+    .filter(([tag, s]) => s.total >= minSamples && !EXCLUDED_TAGS.has(tag))
     .map(([tag, s]) => ({ tag, accuracy: s.correct / s.total, total: s.total }))
     .filter((w) => w.accuracy < threshold)
     .sort((a, b) => a.accuracy - b.accuracy);
@@ -34,7 +37,7 @@ const TAG_LEVELS: Record<string, number[]> = {
   sanshoku: [2, 3], ittsuu: [2, 3], honitsu: [5], chinitsu: [5],
   chanta: [3, 4], iipeikou: [2, 3], sanankou: [4],
   meld: [6], kuitan: [6],
-  aka: [3, 4], ura: [3, 4], honba: [3, 4], kyotaku: [3, 4],
+  aka: [3, 4], ura: [3, 4],
   pinfu: [2, 3], riichi: [1, 2], yakuhai: [1, 2],
   tsumo: [1, 2, 3], ron: [1, 2, 3], oya: [2, 3, 4], child: [2, 3, 4],
   basic: [1, 2],
@@ -59,10 +62,14 @@ export function generateWeaknessProblem(
   const levels = TAG_LEVELS[chosen.tag] ?? [2, 3, 4];
 
   for (let i = 0; i < 400; i++) {
-    const p = generateScoreProblem(pick(rng, levels));
+    const p = generateScoreProblem(pick(rng, levels), undefined, { extras: false });
     if (p.tags.includes(chosen.tag)) {
       return { problem: p, targetTag: chosen.tag, accuracy: chosen.accuracy };
     }
   }
-  return { problem: generateScoreProblem(pick(rng, levels)), targetTag: chosen.tag, accuracy: chosen.accuracy };
+  return {
+    problem: generateScoreProblem(pick(rng, levels), undefined, { extras: false }),
+    targetTag: chosen.tag,
+    accuracy: chosen.accuracy,
+  };
 }
