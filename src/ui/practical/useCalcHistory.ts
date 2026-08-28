@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { PracticalInput } from '../../core/practical';
-import type { HonorTileId, TileId } from '../../core/tiles';
+import type { HonorTileId } from '../../core/tiles';
 
 export interface HistoryEntry {
   at: number; // epoch ms
@@ -17,12 +17,11 @@ export interface HistoryEntry {
   };
 }
 
-/** 対局中に持ち越す条件（仕様 #50, #51） */
+/** 対局中に持ち越す条件（仕様 #50） */
 export interface StickyConditions {
   oya: boolean;
   roundWind: HonorTileId;
   seatWind: HonorTileId;
-  doraIndicators: TileId[];
   honba: number;
   kyotaku: number;
 }
@@ -67,7 +66,6 @@ export function useCalcHistory() {
         oya: entry.input.oya,
         roundWind: entry.input.roundWind,
         seatWind: entry.input.seatWind,
-        doraIndicators: entry.input.doraIndicators,
         honba: entry.input.honba,
         kyotaku: entry.input.kyotaku,
       };

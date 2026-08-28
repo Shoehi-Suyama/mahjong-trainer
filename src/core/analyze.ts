@@ -43,6 +43,10 @@ export interface AnalyzeInput {
   seatWind: HonorTileId;
   doraIndicators?: TileId[];
   uraIndicators?: TileId[];
+  /** ドラ枚数を直接指定（指定すると doraIndicators は無視）。実戦用モードで使う。 */
+  doraCount?: number;
+  /** 裏ドラ枚数を直接指定（指定すると uraIndicators は無視）。 */
+  uraDoraCount?: number;
   /** 赤ドラの枚数（赤5）。役ではなく翻に加算する。 */
   akaDora?: number;
   /** 本場 */
@@ -103,8 +107,16 @@ export function analyzeHand(input: AnalyzeInput): AnalyzeResult {
   };
 
   const allTiles: TileId[] = [...input.concealed, ...melds.flatMap((m) => m.tiles)];
-  const dora = countDora(allTiles, doraInd);
-  const uraDora = ctx.riichi || ctx.doubleRiichi ? countDora(allTiles, uraInd) : 0;
+  const riichiForUra = ctx.riichi || ctx.doubleRiichi;
+  const dora = input.doraCount ?? countDora(allTiles, doraInd);
+  const uraDora =
+    input.uraDoraCount != null
+      ? riichiForUra
+        ? input.uraDoraCount
+        : 0
+      : riichiForUra
+        ? countDora(allTiles, uraInd)
+        : 0;
   const akaDora = input.akaDora ?? 0;
   const honba = input.honba ?? 0;
   const kyotaku = input.kyotaku ?? 0;

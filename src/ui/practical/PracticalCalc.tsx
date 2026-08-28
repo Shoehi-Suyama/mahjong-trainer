@@ -6,7 +6,6 @@ import Tile from '../Tile';
 import TileKeypad from './TileKeypad';
 import Stepper from './Stepper';
 import MeldPicker, { MeldChips } from './MeldPicker';
-import IndicatorPicker from './IndicatorPicker';
 import PracticalResult from './PracticalResult';
 import HistoryModal from './HistoryModal';
 import { useCalcHistory, type HistoryEntry } from './useCalcHistory';
@@ -63,7 +62,6 @@ export default function PracticalCalc() {
       base.oya = sticky.oya;
       base.roundWind = sticky.roundWind;
       base.seatWind = sticky.seatWind;
-      base.doraIndicators = sticky.doraIndicators;
       base.honba = sticky.honba;
       base.kyotaku = sticky.kyotaku;
     }
@@ -71,7 +69,6 @@ export default function PracticalCalc() {
   });
   const [pickWin, setPickWin] = useState(false);
   const [meldOpen, setMeldOpen] = useState(false);
-  const [indOpen, setIndOpen] = useState<null | 'dora' | 'ura'>(null);
   const [showOther, setShowOther] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [result, setResult] = useState<ReturnType<typeof calcPractical> | null>(null);
@@ -171,8 +168,8 @@ export default function PracticalCalc() {
       chankan: false,
       tenho: false,
       chiho: false,
-      uraIndicators: [],
-      akaDora: 0,
+      dora: 0,
+      uraDora: 0,
     }));
   }
 
@@ -195,14 +192,14 @@ export default function PracticalCalc() {
             {input.concealed.length} / {need}枚
           </span>
         </div>
-        <div className="practice-hand" style={{ minHeight: 56 }}>
+        <div className="practice-hand hand-input" style={{ minHeight: 60 }}>
           {sorted.map((id, i) => (
             <button
-              key={i}
+              key={`${id}-${i}`}
               className={`tile-btn${i === winIdx ? ' win-tile' : ''}`}
               onClick={() => handTileClick(id)}
             >
-              <Tile id={id} size="md" raised={i === winIdx} />
+              <Tile id={id} size="md" />
               {i === winIdx && <span className="win-badge">和</span>}
             </button>
           ))}
@@ -337,27 +334,15 @@ export default function PracticalCalc() {
       <div className="card">
         <div className="sec-head"><b>ドラ</b></div>
         <div className="dora-row">
-          <button className="ghost-btn small" onClick={() => setIndOpen('dora')}>
-            ドラ表示牌（{input.doraIndicators.length}）
-          </button>
-          {input.doraIndicators.map((id, i) => (
-            <Tile key={i} id={id} size="sm" />
-          ))}
+          <span>ドラ（赤ドラ含む）</span>
+          <Stepper value={input.dora} min={0} max={20} onChange={(v) => patch({ dora: v })} suffix="翻" />
         </div>
         {riichiOn && (
           <div className="dora-row">
-            <button className="ghost-btn small" onClick={() => setIndOpen('ura')}>
-              裏ドラ表示牌（{input.uraIndicators.length}）
-            </button>
-            {input.uraIndicators.map((id, i) => (
-              <Tile key={i} id={id} size="sm" />
-            ))}
+            <span>裏ドラ</span>
+            <Stepper value={input.uraDora} min={0} max={20} onChange={(v) => patch({ uraDora: v })} suffix="翻" />
           </div>
         )}
-        <div className="dora-row">
-          <span>赤ドラ</span>
-          <Stepper value={input.akaDora} min={0} max={4} onChange={(v) => patch({ akaDora: v })} suffix="枚" />
-        </div>
       </div>
 
       {/* 本場・供託 */}
@@ -400,16 +385,6 @@ export default function PracticalCalc() {
               ...(m.open ? { riichi: false, doubleRiichi: false, ippatsu: false } : {}),
             }));
           }}
-        />
-      )}
-      {indOpen && (
-        <IndicatorPicker
-          title={indOpen === 'dora' ? 'ドラ表示牌' : '裏ドラ表示牌'}
-          indicators={indOpen === 'dora' ? input.doraIndicators : input.uraIndicators}
-          onChange={(next) =>
-            patch(indOpen === 'dora' ? { doraIndicators: next } : { uraIndicators: next })
-          }
-          onClose={() => setIndOpen(null)}
         />
       )}
       {result && (

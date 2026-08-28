@@ -25,9 +25,10 @@ export interface PracticalInput {
   chankan: boolean;
   tenho: boolean;
   chiho: boolean;
-  doraIndicators: TileId[];
-  uraIndicators: TileId[];
-  akaDora: number;
+  /** ドラの合計枚数（表ドラ＋赤ドラ）。翻に直接加算する。 */
+  dora: number;
+  /** 裏ドラの枚数（リーチ時のみ有効） */
+  uraDora: number;
   honba: number;
   kyotaku: number;
 }
@@ -50,9 +51,8 @@ export function emptyPracticalInput(): PracticalInput {
     chankan: false,
     tenho: false,
     chiho: false,
-    doraIndicators: [],
-    uraIndicators: [],
-    akaDora: 0,
+    dora: 0,
+    uraDora: 0,
     honba: 0,
     kyotaku: 0,
   };
@@ -122,9 +122,8 @@ export function calcPractical(input: PracticalInput): AnalyzeResult {
     oya: input.oya,
     roundWind: input.roundWind,
     seatWind: input.seatWind,
-    doraIndicators: input.doraIndicators,
-    uraIndicators: input.uraIndicators,
-    akaDora: input.akaDora,
+    doraCount: input.dora,
+    uraDoraCount: input.uraDora,
     honba: input.honba,
     kyotaku: input.kyotaku,
   });

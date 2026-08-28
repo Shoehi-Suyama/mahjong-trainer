@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { generateScoreProblem, scoreChoices } from '../generate';
 import { analyzeHand } from '../../core/analyze';
-import { mulberry32 } from '../random';
+import { mulberry32, hashId } from '../random';
 
 describe('generateScoreProblem: 生成物は常に正当（仕様 #24）', () => {
   for (const level of [1, 2, 3, 4, 5]) {
@@ -135,5 +135,25 @@ describe('scoreChoices', () => {
   it('ラダー外の点数でも正解を含む', () => {
     const choices = scoreChoices(3901);
     expect(choices).toContain(3901);
+  });
+
+  it('あらゆる金額（0〜48000, 100刻み）で正解が候補に必ず入る', () => {
+    for (let v = 100; v <= 48000; v += 100) {
+      const choices = scoreChoices(v, mulberry32(v));
+      expect(choices).toContain(v);
+      expect(choices).toHaveLength(6);
+    }
+  });
+
+  it('生成される全レベルの問題で、正解が選択肢に必ず含まれる', () => {
+    for (const level of [1, 2, 3, 4, 5, 6]) {
+      for (let i = 0; i < 120; i++) {
+        const p = generateScoreProblem(level, level * 13337 + i);
+        const total = p.result.score.total;
+        const choices = scoreChoices(total, mulberry32(hashId(p.id)));
+        expect(choices).toContain(total);
+        expect(choices).toHaveLength(6);
+      }
+    }
   });
 });

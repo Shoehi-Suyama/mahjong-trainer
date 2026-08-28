@@ -4,20 +4,20 @@ import { calculateScore } from '../core/score';
 const FUS = [20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110];
 const HANS = [1, 2, 3, 4];
 
-function tsumoText(han: number, fu: number, oya: boolean): string {
+function tsumoStr(han: number, fu: number, oya: boolean): string {
   const p = calculateScore({ han, fu, oya, tsumo: true }).payment;
   if (p.type !== 'tsumo') return '';
-  if (p.oya == null) return `${p.ko.toLocaleString()}オール`;
-  return `子${p.ko.toLocaleString()} / 親${p.oya.toLocaleString()}`;
+  if (p.oya == null) return `${p.ko}`; // 親ツモ：各家同額
+  return `${p.ko}/${p.oya}`; // 子ツモ：小さい方が子・大きい方が親
 }
 
 function cell(han: number, fu: number, oya: boolean): ReactNode {
   if (fu === 25 && han === 1) return <span className="pt-na">—</span>;
-  const ron = fu === 20 ? null : calculateScore({ han, fu, oya, tsumo: false }).total; // 20符はツモ(平和)のみ
+  const ron = fu === 20 ? null : calculateScore({ han, fu, oya, tsumo: false }).total;
   return (
     <div className="pt-cell">
-      <span className="pt-ron">{ron == null ? '—' : ron.toLocaleString()}</span>
-      <span className="pt-tsumo">ツモ {tsumoText(han, fu, oya)}</span>
+      <span className="pt-ron">{ron == null ? '—' : ron}</span>
+      <span className="pt-tsumo">{tsumoStr(han, fu, oya)}</span>
     </div>
   );
 }
@@ -42,12 +42,13 @@ export default function ScoreTable() {
         <button className={oya ? 'active' : ''} onClick={() => setOya(true)}>親</button>
       </div>
 
+      <p className="table-note">
+        上段＝ロン和了点／下段＝ツモ
+        {oya ? '（各家同額）' : '（子の支払い／親の支払い）'}
+      </p>
+
       <div className="card table-scroll">
-        <table className="score-table">
-          <caption>
-            {oya ? '親' : '子'}の和了点（上：ロン和了点／下：ツモで
-            {oya ? '子3人が支払う点数' : '他の子 / 親 が支払う点数'}）
-          </caption>
+        <table className="score-table compact">
           <thead>
             <tr>
               <th>符＼翻</th>
@@ -70,21 +71,20 @@ export default function ScoreTable() {
       </div>
 
       <div className="card table-scroll">
-        <table className="score-table">
-          <caption>満貫以上（{oya ? '親' : '子'}）</caption>
+        <table className="score-table compact">
           <thead>
             <tr>
-              <th></th>
-              <th>ロン和了点</th>
-              <th>ツモ（{oya ? '各家' : '子 / 親'}）</th>
+              <th>満貫以上</th>
+              <th>ロン</th>
+              <th>ツモ</th>
             </tr>
           </thead>
           <tbody>
             {LIMITS.map(([label, base]) => {
               const ron = c100(base * (oya ? 6 : 4));
               const tsu = oya
-                ? `${c100(base * 2).toLocaleString()}オール`
-                : `子${c100(base * 1).toLocaleString()} / 親${c100(base * 2).toLocaleString()}`;
+                ? `${c100(base * 2)}`
+                : `${c100(base * 1)}/${c100(base * 2)}`;
               return (
                 <tr key={label}>
                   <th>{label}</th>

@@ -367,27 +367,34 @@ export function generateScoreProblem(level = 1, seed?: number, opts: GenerateOpt
   throw new Error(`generateScoreProblem: レベル${level}の問題を生成できませんでした`);
 }
 
+// 選択肢の誤答に使う代表的な点数（子ロン・親ロン・各種ツモ合計などを網羅、昇順）
 const SCORE_LADDER = [
-  1000, 1300, 1500, 1600, 2000, 2300, 2600, 2900, 3200, 3900, 4000, 4500, 5200, 5800,
-  6400, 7700, 8000, 9600, 11600, 12000, 16000, 18000, 24000, 32000, 36000, 48000,
+  1000, 1300, 1500, 1600, 2000, 2300, 2600, 2700, 2900, 3200, 3400, 3600, 3900, 4000,
+  4500, 4800, 5200, 5800, 6000, 6400, 6800, 7100, 7700, 7900, 8000, 8700, 9200, 9600,
+  10600, 11600, 11700, 12000, 12300, 15300, 16000, 18000, 24000, 32000, 36000, 48000,
 ];
 
-/** 選択式の点数候補（正解＋近い誤答）。 */
+/** 選択式の点数候補（正解＋近い誤答）。正解は必ず含まれる。 */
 export function scoreChoices(correctTotal: number, rng: Rng = mulberry32(correctTotal), n = 6): number[] {
   let idx = SCORE_LADDER.indexOf(correctTotal);
   if (idx < 0) {
-    // ラダー外の値はそのまま候補に含め、近傍を補う
+    // ラダー外の値は直近の位置を基準に近傍から誤答を集める
     idx = SCORE_LADDER.findIndex((v) => v > correctTotal);
     if (idx < 0) idx = SCORE_LADDER.length - 1;
   }
-  const set = new Set<number>([correctTotal]);
-  let spread = 1;
-  while (set.size < n && spread < SCORE_LADDER.length) {
+  const distractors: number[] = [];
+  const seen = new Set<number>([correctTotal]);
+  for (let spread = 1; spread < SCORE_LADDER.length && distractors.length < n - 1; spread++) {
     for (const d of [spread, -spread]) {
+      if (distractors.length >= n - 1) break;
       const j = idx + d;
-      if (j >= 0 && j < SCORE_LADDER.length) set.add(SCORE_LADDER[j]);
+      if (j < 0 || j >= SCORE_LADDER.length) continue;
+      const v = SCORE_LADDER[j];
+      if (seen.has(v)) continue;
+      seen.add(v);
+      distractors.push(v);
     }
-    spread++;
   }
-  return shuffle(rng, [...set]).slice(0, n).sort((a, b) => a - b);
+  // 正解を先頭に固定してから n 件に切る → 正解が落ちない
+  return [correctTotal, ...shuffle(rng, distractors)].slice(0, n).sort((a, b) => a - b);
 }
