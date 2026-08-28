@@ -192,7 +192,7 @@ export default function PracticalCalc() {
             {input.concealed.length} / {need}枚
           </span>
         </div>
-        <div className="practice-hand hand-input" style={{ minHeight: 60 }}>
+        <div className="practice-hand hand-input">
           {sorted.map((id, i) => (
             <button
               key={`${id}-${i}`}
@@ -203,7 +203,7 @@ export default function PracticalCalc() {
               {i === winIdx && <span className="win-badge">和</span>}
             </button>
           ))}
-          {sorted.length === 0 && <span style={{ color: '#999' }}>下の牌をタップ</span>}
+          {sorted.length === 0 && <span className="hand-empty">下の牌をタップ</span>}
         </div>
         <div className="practice-actions" style={{ justifyContent: 'flex-start' }}>
           <button
