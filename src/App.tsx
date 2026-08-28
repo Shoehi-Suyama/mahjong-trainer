@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Home, { type Screen } from './ui/Home';
+import PracticalCalc from './ui/practical/PracticalCalc';
 import ScoreQuiz from './ui/ScoreQuiz';
 import AnalysisQuiz from './ui/AnalysisQuiz';
 import PracticeTraining from './ui/PracticeTraining';
@@ -12,6 +13,7 @@ import SettingsScreen from './ui/SettingsScreen';
 
 const TITLES: Record<Screen, string> = {
   home: '麻雀 点数計算トレーナー',
+  practical: '実戦用 点数計算',
   quiz: '点数計算問題',
   analysis: '手牌分析問題',
   practice: '実戦トレーニング',
@@ -38,6 +40,7 @@ export default function App() {
       </header>
 
       {screen === 'home' && <Home onNavigate={setScreen} onOpenTable={() => setTableOpen(true)} />}
+      {screen === 'practical' && <PracticalCalc />}
       {screen === 'quiz' && <ScoreQuiz />}
       {screen === 'analysis' && <AnalysisQuiz />}
       {screen === 'practice' && <PracticeTraining />}

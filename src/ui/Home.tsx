@@ -1,5 +1,6 @@
 export type Screen =
   | 'home'
+  | 'practical'
   | 'quiz'
   | 'analysis'
   | 'practice'
@@ -17,6 +18,7 @@ interface HomeProps {
 type ItemKey = Screen | 'table' | null;
 
 const ITEMS: { key: ItemKey; label: string; sub: string }[] = [
+  { key: 'practical', label: '実戦用 点数計算', sub: '手牌を入力して即計算' },
   { key: 'quiz', label: '点数計算問題', sub: 'アガリを見て点数を答える' },
   { key: 'analysis', label: '手牌分析問題', sub: '役・翻・符・点を個別に' },
   { key: 'practice', label: '実戦トレーニング', sub: '配牌からアガリまで' },

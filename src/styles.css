@@ -429,13 +429,188 @@ button {
   text-overflow: ellipsis;
 }
 
-.tsumo-cell {
+.score-table small { color: #777; font-size: 0.72rem; }
+.pt-cell {
   display: flex;
   flex-direction: column;
-  line-height: 1.25;
+  align-items: center;
+  line-height: 1.3;
+}
+.pt-ron { font-weight: 700; }
+.pt-tsumo { font-size: 0.68rem; color: #777; white-space: nowrap; }
+.pt-na { color: #bbb; }
+
+/* ---- 実戦用 点数計算 ---- */
+.practical { padding-bottom: 88px; }
+.practical-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 8px;
+}
+.ghost-btn.small {
+  margin-top: 0;
+  padding: 6px 12px;
   font-size: 0.8rem;
 }
-.score-table small { color: #777; font-size: 0.72rem; }
+.ghost-btn.small.active {
+  background: var(--primary);
+  color: var(--primary-fg);
+  border-color: var(--primary);
+}
+.sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.sec-head .ok { color: var(--primary); font-weight: 700; }
+.sec-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 14px;
+}
+.sec-grid .sec-head { margin-bottom: 4px; }
+
+.keypad { margin-top: 10px; }
+.keypad-group { margin-bottom: 8px; }
+.keypad-label { font-size: 0.72rem; color: #888; margin-bottom: 3px; }
+.keypad-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.keypad-tile {
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0;
+  border-radius: 6px;
+}
+.keypad-tile:disabled { opacity: 0.32; }
+.keypad-count {
+  position: absolute;
+  right: -3px;
+  top: -5px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 0 4px;
+  line-height: 15px;
+}
+
+.win-tile { position: relative; }
+.win-badge {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 7px;
+  padding: 0 4px;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.stepper button {
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: var(--card);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.stepper button:disabled { opacity: 0.4; }
+.stepper-val {
+  min-width: 64px;
+  text-align: center;
+  font-weight: 700;
+  padding: 0 6px;
+}
+
+.dora-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.meld-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.meld-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #eeeae0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+.meld-chip-tiles { display: inline-flex; gap: 2px; }
+.meld-chip-x { color: var(--accent); font-size: 0.75rem; font-weight: 800; }
+
+.ind-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.ind-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #eeeae0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+.ind-arrow { font-size: 0.78rem; color: #555; }
+
+.err-box { background: #fbe5e3; border-color: var(--accent); }
+.err-box ul { margin: 6px 0 0; padding-left: 4px; list-style: none; }
+.err-box li { color: var(--accent); font-size: 0.9rem; }
+
+.practical-bottom {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  max-width: 720px;
+  margin: 0 auto;
+}
+.practical-bottom .primary-btn { margin-top: 0; }
+
+.result-hero { text-align: center; padding: 10px 0 4px; }
+.result-total { font-size: 2.6rem; font-weight: 800; color: var(--primary); }
+.result-method { font-weight: 700; color: #444; margin-top: 2px; }
+.result-payout { list-style: none; padding: 0; margin: 10px 0; }
+.result-payout li { padding: 3px 0; }
+.result-payout .result-sep {
+  border-top: 1px dashed var(--border);
+  margin-top: 6px;
+  padding-top: 6px;
+  font-weight: 700;
+}
+
+.hist-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.hist-top { display: flex; justify-content: space-between; font-size: 0.8rem; color: #777; }
+.hist-top b { color: var(--fg); font-size: 1.05rem; }
+.hist-sub { font-weight: 700; margin: 2px 0; }
+.hist-yaku { font-size: 0.82rem; color: #666; }
 
 /* ---- 設定 ---- */
 .setting-row {

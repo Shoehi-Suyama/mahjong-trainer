@@ -28,6 +28,8 @@ export interface YakuContext {
   chankan?: boolean; // 槍槓
   haitei?: boolean; // 海底摸月
   houtei?: boolean; // 河底撈魚
+  tenho?: boolean; // 天和
+  chiho?: boolean; // 地和
 }
 
 export interface Yaku {
@@ -279,6 +281,8 @@ export function contextYaku(ctx: YakuContext): Yaku[] {
   if (ctx.chankan) yaku.push({ name: '槍槓', han: 1 });
   if (ctx.haitei) yaku.push({ name: '海底摸月', han: 1 });
   if (ctx.houtei) yaku.push({ name: '河底撈魚', han: 1 });
+  if (ctx.tenho) yaku.push({ name: '天和', han: 0, yakuman: true });
+  if (ctx.chiho) yaku.push({ name: '地和', han: 0, yakuman: true });
   return yaku;
 }
 

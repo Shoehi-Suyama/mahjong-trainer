@@ -32,6 +32,12 @@ export interface AnalyzeInput {
   riichi?: boolean;
   doubleRiichi?: boolean;
   ippatsu?: boolean;
+  haitei?: boolean;
+  houtei?: boolean;
+  rinshan?: boolean;
+  chankan?: boolean;
+  tenho?: boolean;
+  chiho?: boolean;
   oya: boolean;
   roundWind: HonorTileId;
   seatWind: HonorTileId;
@@ -86,6 +92,12 @@ export function analyzeHand(input: AnalyzeInput): AnalyzeResult {
     riichi: !!input.riichi,
     doubleRiichi: input.doubleRiichi,
     ippatsu: input.ippatsu,
+    haitei: input.haitei,
+    houtei: input.houtei,
+    rinshan: input.rinshan,
+    chankan: input.chankan,
+    tenho: input.tenho,
+    chiho: input.chiho,
     tsumo: input.tsumo,
     menzen,
   };
