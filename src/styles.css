@@ -490,11 +490,12 @@ button {
 .keypad { margin-top: 10px; }
 .keypad-group { margin-bottom: 8px; }
 .keypad-label { font-size: 0.72rem; color: #888; margin-bottom: 3px; }
-/* 1〜9（字牌は7種）を必ず横1列に並べる。牌はセル幅に合わせて縮むので端末幅に依存しない */
+/* 1〜9（字牌は7種）を必ず横1列に並べる。牌はセル幅に合わせて縮むので端末幅に依存しない。
+   タップ範囲はセル全体（gap:0＋ボタン内 padding）にして、隣の牌に反応しないようにする */
 .keypad-row {
   display: grid;
   grid-template-columns: repeat(9, minmax(0, 1fr));
-  gap: 3px;
+  gap: 0;
 }
 .keypad-tile {
   position: relative;
@@ -502,15 +503,16 @@ button {
   width: 100%;
   background: none;
   border: none;
-  padding: 0;
+  padding: 3px 2px;
   border-radius: 6px;
+  touch-action: manipulation;
 }
 .keypad-tile .tile { width: 100%; }
 .keypad-tile:disabled { opacity: 0.32; }
 .keypad-count {
   position: absolute;
-  right: -3px;
-  top: -5px;
+  right: 1px;
+  top: -3px;
   background: var(--primary);
   color: #fff;
   font-size: 10px;
@@ -518,6 +520,7 @@ button {
   border-radius: 8px;
   padding: 0 4px;
   line-height: 15px;
+  pointer-events: none; /* バッジが隣の牌のタップを奪わないように */
 }
 
 /* 手牌入力: 14枚を必ず横1列に。牌はセル幅に合わせて縮むので iPhone 幅でも溢れない。
@@ -525,14 +528,20 @@ button {
 .hand-input {
   display: grid;
   grid-template-columns: repeat(14, minmax(0, 1fr));
-  gap: 2px;
+  gap: 0;
   justify-items: center;
   align-content: start;
   align-items: center;
   min-height: 48px;
   padding: 8px 0 6px;
 }
-.hand-input .tile-btn { min-width: 0; width: 100%; line-height: 0; }
+.hand-input .tile-btn {
+  min-width: 0;
+  width: 100%;
+  padding: 0 1px;
+  line-height: 0;
+  touch-action: manipulation;
+}
 .hand-input .tile-btn .tile { width: 100%; }
 .hand-input .hand-empty { grid-column: 1 / -1; align-self: center; color: #999; }
 @media (min-width: 520px) {
