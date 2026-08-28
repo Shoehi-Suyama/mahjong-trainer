@@ -37,13 +37,20 @@ export interface AnalyzeInput {
   seatWind: HonorTileId;
   doraIndicators?: TileId[];
   uraIndicators?: TileId[];
+  /** 赤ドラの枚数（赤5）。役ではなく翻に加算する。 */
+  akaDora?: number;
+  /** 本場 */
+  honba?: number;
+  /** 供託（1000点棒の本数） */
+  kyotaku?: number;
 }
 
 export interface HanBreakdown {
   yaku: Yaku[];
   dora: number;
   uraDora: number;
-  /** 通常役＋ドラの合計翻。役満のときは 0。 */
+  akaDora: number;
+  /** 通常役＋ドラ＋赤ドラの合計翻。役満のときは 0。 */
   total: number;
   /** 役満の倍数（0=通常, 1=役満, 2=ダブル役満…） */
   yakuman: number;
@@ -86,6 +93,9 @@ export function analyzeHand(input: AnalyzeInput): AnalyzeResult {
   const allTiles: TileId[] = [...input.concealed, ...melds.flatMap((m) => m.tiles)];
   const dora = countDora(allTiles, doraInd);
   const uraDora = ctx.riichi || ctx.doubleRiichi ? countDora(allTiles, uraInd) : 0;
+  const akaDora = input.akaDora ?? 0;
+  const honba = input.honba ?? 0;
+  const kyotaku = input.kyotaku ?? 0;
 
   const candidates: AnalyzeResult[] = [];
 
@@ -97,20 +107,22 @@ export function analyzeHand(input: AnalyzeInput): AnalyzeResult {
   ): AnalyzeResult => {
     const yakumanCount = yaku.filter((y) => y.yakuman).length;
     const normalHan = yaku.reduce((s, y) => s + (y.yakuman ? 0 : y.han), 0);
-    const hanTotal = yakumanCount > 0 ? 0 : normalHan + dora + uraDora;
+    const hanTotal = yakumanCount > 0 ? 0 : normalHan + dora + uraDora + akaDora;
     const score = calculateScore({
       han: hanTotal,
       fu: fu.rounded,
       oya: input.oya,
       tsumo: input.tsumo,
       yakuman: yakumanCount,
+      honba,
+      kyotaku,
     });
     const scoringYaku = yakumanCount > 0 ? yaku.filter((y) => y.yakuman) : yaku;
     return {
       agari: true,
       valid: yaku.length > 0,
       reason: yaku.length > 0 ? undefined : '役なし',
-      han: { yaku: scoringYaku, dora, uraDora, total: hanTotal, yakuman: yakumanCount },
+      han: { yaku: scoringYaku, dora, uraDora, akaDora, total: hanTotal, yakuman: yakumanCount },
       fu,
       score,
       wait,
@@ -170,7 +182,7 @@ export function analyzeHand(input: AnalyzeInput): AnalyzeResult {
       agari: false,
       valid: false,
       reason: 'アガリ形ではありません',
-      han: { yaku: [], dora, uraDora, total: 0, yakuman: 0 },
+      han: { yaku: [], dora, uraDora, akaDora, total: 0, yakuman: 0 },
       fu: { raw: 0, rounded: 0, parts: [], fixed: false },
       score: calculateScore({ han: 0, fu: 0, oya: input.oya, tsumo: input.tsumo }),
       wait: null,

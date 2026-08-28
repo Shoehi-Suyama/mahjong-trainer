@@ -25,6 +25,7 @@ export default function Explanation({ result: r, oya, tsumo }: ExplanationProps)
           </li>
         ))}
         {r.han.yakuman === 0 && r.han.dora > 0 && <li>ドラ　{r.han.dora}翻</li>}
+        {r.han.yakuman === 0 && r.han.akaDora > 0 && <li>赤ドラ　{r.han.akaDora}翻</li>}
         {r.han.yakuman === 0 && r.han.uraDora > 0 && <li>裏ドラ　{r.han.uraDora}翻</li>}
         <li className="total-line">
           {r.han.yakuman > 0
@@ -63,10 +64,30 @@ export default function Explanation({ result: r, oya, tsumo }: ExplanationProps)
               ? `${r.han.total}翻 ${r.score.limit}`
               : `${r.fu.rounded}符${r.han.total}翻`}
         </li>
-        <li className="total-line">
-          {r.score.display}
-          {r.score.payment.type === 'tsumo' && `（合計 ${r.score.total.toLocaleString()}点）`}
-        </li>
+        {(() => {
+          const hasExtra = r.score.honba > 0 || r.score.kyotaku > 0;
+          const tsumoTotal =
+            r.score.payment.type === 'tsumo'
+              ? `（${hasExtra ? '素点' : '合計'} ${r.score.baseTotal.toLocaleString()}点）`
+              : '';
+          return (
+            <>
+              <li className={hasExtra ? '' : 'total-line'}>
+                {r.score.display}
+                {tsumoTotal}
+              </li>
+              {r.score.honba > 0 && (
+                <li>
+                  ＋ {r.score.honba}本場　{tsumo ? `各${r.score.honba * 100}点（計 ${r.score.honba * 300}点）` : `${r.score.honba * 300}点`}
+                </li>
+              )}
+              {r.score.kyotaku > 0 && <li>＋ 供託　{(r.score.kyotaku * 1000).toLocaleString()}点</li>}
+              {hasExtra && (
+                <li className="total-line">収入合計 {r.score.total.toLocaleString()}点</li>
+              )}
+            </>
+          );
+        })()}
       </ul>
     </div>
   );

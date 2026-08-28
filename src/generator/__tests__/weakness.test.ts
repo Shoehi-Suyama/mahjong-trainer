@@ -31,15 +31,21 @@ describe('generateWeaknessProblem', () => {
       expect(res!.targetTag).toBe(tag);
       expect(res!.problem.tags).toContain(tag);
       // 生成物は常に正当
+      const q = res!.problem;
       const re = analyzeHand({
-        concealed: [...res!.problem.concealed, res!.problem.winningTile],
-        winningTile: res!.problem.winningTile,
-        tsumo: res!.problem.tsumo,
-        riichi: res!.problem.riichi,
-        oya: res!.problem.oya,
-        roundWind: res!.problem.roundWind,
-        seatWind: res!.problem.seatWind,
-        doraIndicators: res!.problem.doraIndicators,
+        concealed: [...q.concealed, q.winningTile],
+        melds: q.melds,
+        winningTile: q.winningTile,
+        tsumo: q.tsumo,
+        riichi: q.riichi,
+        oya: q.oya,
+        roundWind: q.roundWind,
+        seatWind: q.seatWind,
+        doraIndicators: q.doraIndicators,
+        uraIndicators: q.uraIndicators,
+        akaDora: q.akaTiles.length,
+        honba: q.honba,
+        kyotaku: q.kyotaku,
       });
       expect(re.valid).toBe(true);
       expect(re.score.total).toBe(res!.problem.result.score.total);

@@ -95,3 +95,35 @@ describe('満貫以上（仕様 #32）', () => {
     expect(calculateScore({ han: 4, fu: 40, oya: false, tsumo: false }).total).toBe(8000);
   });
 });
+
+describe('本場・供託（仕様 #58）', () => {
+  it('30符3翻 子ロン 2本場 → 3900 + 600 = 4500', () => {
+    const r = calculateScore({ han: 3, fu: 30, oya: false, tsumo: false, honba: 2 });
+    expect(r.payment).toEqual({ type: 'ron', amount: 4500 });
+    expect(r.total).toBe(4500);
+    expect(r.baseTotal).toBe(3900);
+  });
+
+  it('30符3翻 子ツモ 1本場 → 1100/2100（各 +100）計 4300', () => {
+    const r = calculateScore({ han: 3, fu: 30, oya: false, tsumo: true, honba: 1 });
+    expect(r.payment).toEqual({ type: 'tsumo', ko: 1100, oya: 2100 });
+    expect(r.total).toBe(4300); // 素点4000 + 本場300
+  });
+
+  it('30符3翻 親ツモ 3本場 → 2300オール 計 6900', () => {
+    const r = calculateScore({ han: 3, fu: 30, oya: true, tsumo: true, honba: 3 });
+    expect(r.payment).toEqual({ type: 'tsumo', ko: 2300 });
+    expect(r.total).toBe(6900); // 素点6000 + 本場900
+  });
+
+  it('供託1000点は和了者の収入に加算（放銃者の支払いは不変）', () => {
+    const r = calculateScore({ han: 3, fu: 30, oya: false, tsumo: false, kyotaku: 1 });
+    expect(r.payment).toEqual({ type: 'ron', amount: 3900 });
+    expect(r.total).toBe(4900);
+  });
+
+  it('本場と供託の同時適用: 40符3翻 子ロン 1本場 + 供託2本 → 5200 + 300 + 2000 = 7500', () => {
+    const r = calculateScore({ han: 3, fu: 40, oya: false, tsumo: false, honba: 1, kyotaku: 2 });
+    expect(r.total).toBe(7500);
+  });
+});

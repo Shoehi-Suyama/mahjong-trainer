@@ -5,6 +5,7 @@ export const TAG_LABEL: Record<string, string> = {
   sanshoku: '三色同順', ittsuu: '一気通貫', toitoi: '対々和', sanankou: '三暗刻',
   honitsu: '混一色', chinitsu: '清一色', chanta: 'チャンタ', iipeikou: '一盃口',
   meld: '鳴きあり', kuitan: '喰いタン',
+  aka: '赤ドラ', ura: '裏ドラ', honba: '本場', kyotaku: '供託',
   practice: '実戦', timeattack: 'タイムアタック',
 };
 

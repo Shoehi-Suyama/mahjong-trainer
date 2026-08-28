@@ -46,7 +46,7 @@ function pickJunk(rng: Rng, count: number, avoid: TileId[]): TileId[] {
 export function generatePracticeProblem(level = 1, seed?: number): PracticeProblem {
   const s = seed ?? (Math.random() * 2 ** 32) >>> 0;
   const rng: Rng = mulberry32(s);
-  const target = generateScoreProblem(level, s ^ 0x9e3779b9);
+  const target = generateScoreProblem(level, s ^ 0x9e3779b9, { extras: false, tileExtras: false });
 
   const goal = target.concealed; // 13枚のテンパイ形
   const winning = target.winningTile;

@@ -10,19 +10,39 @@ interface HandViewProps {
   size?: TileSize;
   /** 和了牌をツモ表示（右に余白）にするか */
   tsumo?: boolean;
+  /** 赤ドラにする牌ID（同種の最初の1枚を赤扱い） */
+  akaTiles?: TileId[];
 }
 
-export default function HandView({ concealed, winningTile, melds = [], size = 'md', tsumo }: HandViewProps) {
+export default function HandView({
+  concealed,
+  winningTile,
+  melds = [],
+  size = 'md',
+  tsumo,
+  akaTiles = [],
+}: HandViewProps) {
   const sorted = sortTileIds(concealed);
+  const akaLeft = new Map<TileId, number>();
+  for (const t of akaTiles) akaLeft.set(t, (akaLeft.get(t) ?? 0) + 1);
+  const takeAka = (id: TileId) => {
+    const n = akaLeft.get(id) ?? 0;
+    if (n > 0) {
+      akaLeft.set(id, n - 1);
+      return true;
+    }
+    return false;
+  };
+
   return (
     <div className="handview">
       <div className="handview-tiles">
         {sorted.map((id, i) => (
-          <Tile key={`c${i}`} id={id} size={size} />
+          <Tile key={`c${i}`} id={id} size={size} aka={takeAka(id)} />
         ))}
         {winningTile && (
           <span className={tsumo ? 'handview-draw' : 'handview-ron'}>
-            <Tile id={winningTile} size={size} raised />
+            <Tile id={winningTile} size={size} raised aka={takeAka(winningTile)} />
           </span>
         )}
       </div>

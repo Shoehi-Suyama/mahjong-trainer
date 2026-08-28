@@ -13,10 +13,10 @@ const FU_OPTIONS = [20, 25, 30, 40, 50, 60, 70, 80];
 
 function makeFuProblem(level: number): Problem {
   for (let i = 0; i < 200; i++) {
-    const p = generateScoreProblem(level);
+    const p = generateScoreProblem(level, undefined, { extras: false, tileExtras: false });
     if (!p.result.score.limit) return p; // 満貫以上は符不問なので除外
   }
-  return generateScoreProblem(level);
+  return generateScoreProblem(level, undefined, { extras: false, tileExtras: false });
 }
 
 export default function FuQuiz() {

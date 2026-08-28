@@ -118,6 +118,35 @@ describe('analyzeHand: 統合', () => {
     expect(r2.score.total).toBe(8000);
   });
 
+  it('赤ドラは役ではないが翻に加算される', () => {
+    const r = run({
+      concealed: parseTiles('234m 567m 234p 678p 55s'),
+      winningTile: 'pin6',
+      tsumo: false,
+      riichi: true,
+      akaDora: 2,
+    });
+    // リーチ + タンヤオ + ピンフ = 3翻、赤ドラ2 で 5翻 → 満貫
+    expect(r.han.akaDora).toBe(2);
+    expect(r.han.yaku.map((y) => y.name)).not.toContain('赤ドラ');
+    expect(r.han.total).toBe(5);
+    expect(r.score.limit).toBe('満貫');
+  });
+
+  it('本場・供託が analyzeHand の score に反映される', () => {
+    const r = run({
+      concealed: parseTiles('234m 567m 234p 678p 55s'),
+      winningTile: 'pin6',
+      tsumo: false,
+      riichi: true,
+      honba: 2,
+      kyotaku: 1,
+    });
+    // 30符3翻 子ロン 3900 + 2本場600 + 供託1000 = 5500
+    expect(r.score.baseTotal).toBe(3900);
+    expect(r.score.total).toBe(5500);
+  });
+
   it('親のリーチのみ 40符1翻 → 2000点', () => {
     const r = run({
       oya: true,

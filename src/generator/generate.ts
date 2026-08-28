@@ -46,6 +46,11 @@ export interface Problem {
   winningTile: TileId;
   melds: Meld[];
   doraIndicators: TileId[];
+  uraIndicators: TileId[];
+  /** 赤ドラにする牌（手牌中の 5 のうち何を赤扱いにするか） */
+  akaTiles: TileId[];
+  honba: number;
+  kyotaku: number;
   result: AnalyzeResult;
   tags: string[];
 }
@@ -235,12 +240,27 @@ function deriveTags(p: Omit<Problem, 'tags'>): string[] {
   if (names.includes('タンヤオ') && p.melds.length > 0) t.add('kuitan');
   if (p.melds.length > 0) t.add('meld');
   if (p.result.han.dora > 0) t.add('dora');
+  if (p.result.han.akaDora > 0) t.add('aka');
+  if (p.result.han.uraDora > 0) t.add('ura');
+  if (p.honba > 0) t.add('honba');
+  if (p.kyotaku > 0) t.add('kyotaku');
   if (p.result.form === 'standard' && p.result.fu.rounded >= 40) t.add('fu');
   if (p.result.han.total <= 2) t.add('basic');
   return [...t];
 }
 
-export function generateScoreProblem(level = 1, seed?: number): Problem {
+export interface GenerateOptions {
+  /** 本場・供託を付けるか（点数計算問題では true） */
+  extras?: boolean;
+  /** 赤ドラ・裏ドラを付けるか（実戦トレーニングでは false） */
+  tileExtras?: boolean;
+}
+
+const FIVES: TileId[] = ['man5', 'pin5', 'sou5'];
+
+export function generateScoreProblem(level = 1, seed?: number, opts: GenerateOptions = {}): Problem {
+  const extras = opts.extras ?? true;
+  const tileExtras = opts.tileExtras ?? true;
   const rng: Rng = seed != null ? mulberry32(seed) : mulberry32((Math.random() * 2 ** 32) >>> 0);
   const spec = LEVELS[level] ?? LEVELS[1];
 
@@ -280,11 +300,42 @@ export function generateScoreProblem(level = 1, seed?: number): Problem {
       doraIndicators = [pickZeroDoraIndicator(allTiles, rng)];
     }
 
-    const result = analyzeHand({ ...baseInput, doraIndicators });
+    // 裏ドラ（リーチ時のみ有効）
+    let uraIndicators: TileId[] = [];
+    if (tileExtras && raw.riichi && level >= 3 && rng() < 0.45) {
+      const ind = rng() < 0.5 ? pickDoraIndicatorFavoring(allTiles, rng) : null;
+      uraIndicators = [ind ?? pickZeroDoraIndicator(allTiles, rng)];
+    }
+
+    // 赤ドラ（手牌に 5 があれば）
+    let akaTiles: TileId[] = [];
+    if (tileExtras && level >= 3 && rng() < 0.3) {
+      const fivesInHand = FIVES.filter((f) => allTiles.includes(f));
+      const n = fivesInHand.length && (level >= 4 && rng() < 0.35) ? 2 : 1;
+      akaTiles = shuffle(rng, fivesInHand).slice(0, Math.min(n, fivesInHand.length));
+    }
+
+    // 本場・供託
+    let honba = 0;
+    let kyotaku = 0;
+    if (extras && level >= 2) {
+      const h = rng();
+      honba = h < 0.62 ? 0 : h < 0.85 ? 1 : 2;
+      kyotaku = rng() < 0.8 ? 0 : randInt(rng, 1, 2);
+    }
+
+    const result = analyzeHand({
+      ...baseInput,
+      doraIndicators,
+      uraIndicators,
+      akaDora: akaTiles.length,
+      honba,
+      kyotaku,
+    });
     if (!result.valid || !entry.accept(result)) continue;
 
     const han = result.han.total;
-    const hiCap = spec.han[1] + (result.han.dora > 0 ? 2 : 0);
+    const hiCap = spec.han[1] + (result.han.dora > 0 ? 2 : 0) + result.han.uraDora + result.han.akaDora;
     if (han < spec.han[0] || han > hiCap) continue;
     if (spec.minFu && !(result.form === 'standard' && result.fu.rounded >= spec.minFu)) continue;
     if (result.score.limit === '役満') continue;
@@ -304,6 +355,10 @@ export function generateScoreProblem(level = 1, seed?: number): Problem {
       winningTile: raw.winningTile,
       melds,
       doraIndicators,
+      uraIndicators,
+      akaTiles,
+      honba,
+      kyotaku,
       result,
     };
     return { ...partial, tags: deriveTags(partial) };

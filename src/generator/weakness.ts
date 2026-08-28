@@ -34,6 +34,7 @@ const TAG_LEVELS: Record<string, number[]> = {
   sanshoku: [2, 3], ittsuu: [2, 3], honitsu: [5], chinitsu: [5],
   chanta: [3, 4], iipeikou: [2, 3], sanankou: [4],
   meld: [6], kuitan: [6],
+  aka: [3, 4], ura: [3, 4], honba: [3, 4], kyotaku: [3, 4],
   pinfu: [2, 3], riichi: [1, 2], yakuhai: [1, 2],
   tsumo: [1, 2, 3], ron: [1, 2, 3], oya: [2, 3, 4], child: [2, 3, 4],
   basic: [1, 2],

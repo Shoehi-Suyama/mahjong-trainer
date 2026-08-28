@@ -10,11 +10,11 @@ const LEVELS = [1, 2, 3, 4, 5, 6];
 export default function AnalysisQuiz() {
   const { stats, record } = useStats();
   const [level, setLevel] = useState(2);
-  const [problem, setProblem] = useState<Problem>(() => generateScoreProblem(2));
+  const [problem, setProblem] = useState<Problem>(() => generateScoreProblem(2, undefined, { extras: false }));
 
   function next(l = level) {
     setLevel(l);
-    setProblem(generateScoreProblem(l));
+    setProblem(generateScoreProblem(l, undefined, { extras: false }));
   }
 
   return (

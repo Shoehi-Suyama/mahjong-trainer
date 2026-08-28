@@ -15,6 +15,7 @@ describe('generateScoreProblem: 生成物は常に正当（仕様 #24）', () =>
         // 保存された result を独立に再現できる
         const re = analyzeHand({
           concealed: [...p.concealed, p.winningTile],
+          melds: p.melds,
           winningTile: p.winningTile,
           tsumo: p.tsumo,
           riichi: p.riichi,
@@ -22,6 +23,10 @@ describe('generateScoreProblem: 生成物は常に正当（仕様 #24）', () =>
           roundWind: p.roundWind,
           seatWind: p.seatWind,
           doraIndicators: p.doraIndicators,
+          uraIndicators: p.uraIndicators,
+          akaDora: p.akaTiles.length,
+          honba: p.honba,
+          kyotaku: p.kyotaku,
         });
 
         expect(re.valid).toBe(true);
@@ -65,6 +70,10 @@ describe('レベル6（副露あり）: 生成物は常に正当', () => {
         roundWind: p.roundWind,
         seatWind: p.seatWind,
         doraIndicators: p.doraIndicators,
+        uraIndicators: p.uraIndicators,
+        akaDora: p.akaTiles.length,
+        honba: p.honba,
+        kyotaku: p.kyotaku,
       });
       expect(re.valid).toBe(true);
       expect(re.han.yaku.length).toBeGreaterThan(0);
@@ -91,6 +100,26 @@ describe('追加役が出題に現れる', () => {
       expect(seen.has(y)).toBe(true);
     }
     expect(seen.has('混全帯幺九') || seen.has('純全帯幺九')).toBe(true);
+  });
+
+  it('Lv3〜4 で赤ドラ・裏ドラ・本場・供託がそれぞれ出題される', () => {
+    const tags = new Set<string>();
+    for (const level of [3, 4]) {
+      for (let i = 0; i < 200; i++) {
+        for (const t of generateScoreProblem(level, level * 3131 + i).tags) tags.add(t);
+      }
+    }
+    for (const t of ['aka', 'ura', 'honba', 'kyotaku']) expect(tags.has(t)).toBe(true);
+  });
+
+  it('extras:false / tileExtras:false で本場・供託・赤・裏が付かない', () => {
+    for (let i = 0; i < 80; i++) {
+      const p = generateScoreProblem(4, 9000 + i, { extras: false, tileExtras: false });
+      expect(p.honba).toBe(0);
+      expect(p.kyotaku).toBe(0);
+      expect(p.akaTiles).toHaveLength(0);
+      expect(p.uraIndicators).toHaveLength(0);
+    }
   });
 });
 

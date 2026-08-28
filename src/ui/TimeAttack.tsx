@@ -29,7 +29,7 @@ export default function TimeAttack() {
 
   const nextProblem = useCallback((l: number) => {
     setPicked(null);
-    setProblem(generateScoreProblem(l));
+    setProblem(generateScoreProblem(l, undefined, { extras: false }));
     qStartRef.current = performance.now();
   }, []);
 
