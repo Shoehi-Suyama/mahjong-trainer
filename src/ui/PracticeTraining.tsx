@@ -1,5 +1,6 @@
 // 実戦トレーニング（仕様 #17-23）。配牌からツモ・打牌を繰り返し、アガリで点数計算。
-// 打牌選択は採点しない（#18）。× 印の不要牌を切ればアガリに到達する。
+// 打牌選択は採点しない（#18）が、不要牌は孤立牌なので「牌効率どおり」に切れば手が進む。
+// 必要牌を切ってしまった場合はツモ山の後ろに戻る（＝手数を余分に使う）。予備は2ツモまで。
 
 import { useMemo, useState } from 'react';
 import Tile from './Tile';
@@ -11,6 +12,7 @@ import { sortTileIds, type TileId } from '../core/tiles';
 import { useStats } from './useStats';
 
 const LEVELS = [1, 2, 3, 4, 5];
+const SPARE_DRAWS = 2;
 
 type Phase = 'draw' | 'discard' | 'agari' | 'dead';
 
@@ -21,34 +23,46 @@ function removeOne(arr: TileId[], t: TileId): TileId[] {
   copy.splice(i, 1);
   return copy;
 }
+function tally(tiles: TileId[]): Map<TileId, number> {
+  const m = new Map<TileId, number>();
+  for (const t of tiles) m.set(t, (m.get(t) ?? 0) + 1);
+  return m;
+}
+
+interface RunState {
+  hand: TileId[];
+  queue: TileId[];
+  drawn: TileId | null;
+  drawsUsed: number;
+  phase: Phase;
+}
+
+function initRun(pp: PracticeProblem): RunState {
+  return { hand: pp.startHand, queue: pp.draws, drawn: null, drawsUsed: 0, phase: 'draw' };
+}
 
 export default function PracticeTraining() {
   const { stats, record } = useStats();
   const [level, setLevel] = useState(1);
   const [pp, setPp] = useState<PracticeProblem>(() => generatePracticeProblem(1));
-
-  const [hand, setHand] = useState<TileId[]>(() => pp.startHand);
-  const [drawn, setDrawn] = useState<TileId | null>(null);
-  const [drawIdx, setDrawIdx] = useState(0);
+  const [run, setRun] = useState<RunState>(() => initRun(pp));
   const [selected, setSelected] = useState<TileId | null>(null);
-  const [phase, setPhase] = useState<Phase>('draw');
   const [turn, setTurn] = useState(0);
-
   const [agariTile, setAgariTile] = useState<TileId | null>(null);
   const [agariTsumo, setAgariTsumo] = useState(false);
 
   const t = pp.target;
+  const { hand, queue, drawn, drawsUsed, phase } = run;
 
-  const full = drawn ? [...hand, drawn] : hand;
-  const canTsumo = drawn != null && isAgari(full);
-  const drawsLeft = pp.draws.length - drawIdx;
-  const ronReady =
-    pp.isRon && drawsLeft === 0 && phase === 'discard' && drawn == null && isAgari([...hand, pp.ronTile!]);
+  const winTile = pp.isRon ? pp.ronTile! : t.winningTile;
+  const maxDraws = pp.draws.length + SPARE_DRAWS;
+  const drawBudget = Math.max(0, maxDraws - drawsUsed);
+  const isDead = phase === 'dead' || (phase === 'draw' && (drawBudget === 0 || queue.length === 0));
 
-  const remainingJunk = useMemo(() => {
-    const set = new Set(pp.junk);
-    return new Set(hand.filter((x) => set.has(x)));
-  }, [hand, pp.junk]);
+  const goalCounts = useMemo(() => tally(pp.goal), [pp]);
+
+  const canTsumo = drawn != null && isAgari([...hand, drawn]);
+  const ronReady = pp.isRon && drawn == null && phase === 'discard' && isAgari([...hand, winTile]);
 
   const agariResult: AnalyzeResult | null = useMemo(() => {
     if (phase !== 'agari' || !agariTile) return null;
@@ -68,61 +82,67 @@ export default function PracticeTraining() {
     const next = generatePracticeProblem(l);
     setLevel(l);
     setPp(next);
-    setHand(next.startHand);
-    setDrawn(null);
-    setDrawIdx(0);
+    setRun(initRun(next));
     setSelected(null);
-    setPhase('draw');
     setTurn(0);
     setAgariTile(null);
     setAgariTsumo(false);
   }
 
   function draw() {
-    if (phase !== 'draw' || drawIdx >= pp.draws.length) return;
-    setDrawn(pp.draws[drawIdx]);
-    setDrawIdx((n) => n + 1);
+    if (phase !== 'draw' || queue.length === 0 || drawsUsed >= maxDraws) return;
+    setRun((r) => ({
+      ...r,
+      drawn: r.queue[0],
+      queue: r.queue.slice(1),
+      drawsUsed: r.drawsUsed + 1,
+      phase: 'discard',
+    }));
     setTurn((n) => n + 1);
-    setPhase('discard');
     setSelected(null);
   }
 
   function discard(tile: TileId) {
     if (phase !== 'discard' || drawn == null) return;
-    let nextHand: TileId[];
-    if (tile === drawn) {
-      nextHand = hand; // ツモ切り
-    } else {
-      nextHand = sortTileIds([...removeOne(hand, tile), drawn]);
-    }
-    setHand(nextHand);
-    setDrawn(null);
-    setSelected(null);
+    const nextHand = tile === drawn ? hand : sortTileIds([...removeOne(hand, tile), drawn]);
 
-    if (pp.isRon && drawIdx >= pp.draws.length) {
-      // ツモ列を撃ち終えた → ロンできるか
-      setPhase(isAgari([...nextHand, pp.ronTile!]) ? 'discard' : 'dead');
-    } else if (drawIdx >= pp.draws.length) {
-      setPhase('dead');
-    } else {
-      setPhase('draw');
+    // 目標テンパイに対して不足した牌はツモ山に戻す（ツモ和了牌は常に最後に残す）
+    const have = tally(nextHand);
+    const shortfall: TileId[] = [];
+    for (const [id, need] of goalCounts) {
+      for (let k = (have.get(id) ?? 0); k < need; k++) shortfall.push(id);
     }
+    let nextQueue = [...queue];
+    for (const g of shortfall) {
+      if (!pp.isRon && nextQueue[nextQueue.length - 1] === winTile) {
+        nextQueue.splice(nextQueue.length - 1, 0, g);
+      } else {
+        nextQueue.push(g);
+      }
+    }
+
+    const tenpaiForRon = pp.isRon && isAgari([...nextHand, winTile]);
+    let nextPhase: Phase;
+    if (tenpaiForRon) nextPhase = 'discard'; // ロン待ち（drawn=null で切る操作は不可）
+    else if (nextQueue.length > 0 && drawsUsed < maxDraws) nextPhase = 'draw';
+    else nextPhase = 'dead';
+
+    setRun((r) => ({ ...r, hand: nextHand, queue: nextQueue, drawn: null, phase: nextPhase }));
+    setSelected(null);
   }
 
   function declareTsumo() {
     if (!canTsumo || drawn == null) return;
     setAgariTile(drawn);
     setAgariTsumo(true);
-    setHand(hand); // drawn は agariTile として渡す
-    setDrawn(null);
-    setPhase('agari');
+    setRun((r) => ({ ...r, drawn: null, phase: 'agari' }));
   }
 
   function declareRon() {
     if (!ronReady) return;
-    setAgariTile(pp.ronTile!);
+    setAgariTile(winTile);
     setAgariTsumo(false);
-    setPhase('agari');
+    setRun((r) => ({ ...r, phase: 'agari' }));
   }
 
   const displayHand = sortTileIds(hand);
@@ -154,27 +174,23 @@ export default function PracticeTraining() {
               <Tile key={i} id={id} size="sm" />
             ))}
           </span>
-          <span>ツモ {drawIdx}/{pp.draws.length}</span>
+          <span>ツモ {drawsUsed}/{maxDraws}</span>
         </div>
 
         {phase !== 'agari' && (
           <>
             <div className="practice-hand">
-              {displayHand.map((id, i) => {
-                const isJunk = remainingJunk.has(id);
-                return (
-                  <span key={`h${i}`} className="tile-slot">
-                    <button
-                      className="tile-btn"
-                      onClick={() => setSelected(selected === id ? null : id)}
-                      disabled={phase !== 'discard'}
-                    >
-                      <Tile id={id} size="md" raised={selected === id} />
-                    </button>
-                    {isJunk && <span className="junk-badge">×</span>}
-                  </span>
-                );
-              })}
+              {displayHand.map((id, i) => (
+                <span key={`h${i}`} className="tile-slot">
+                  <button
+                    className="tile-btn"
+                    onClick={() => setSelected(selected === id ? null : id)}
+                    disabled={phase !== 'discard' || drawn == null}
+                  >
+                    <Tile id={id} size="md" raised={selected === id} />
+                  </button>
+                </span>
+              ))}
               {drawn && (
                 <span className="tile-slot practice-drawn">
                   <button
@@ -188,18 +204,19 @@ export default function PracticeTraining() {
             </div>
 
             <p className="practice-hint">
-              {phase === 'draw' && 'ツモってください。'}
-              {phase === 'discard' && '切る牌をタップ → 「この牌を切る」。× 印は不要牌です。'}
-              {phase === 'dead' && 'この手ではアガリに届きませんでした。'}
+              {isDead && 'ツモが尽きました。牌効率を意識してもう一度。'}
+              {!isDead && phase === 'draw' && 'ツモってください。'}
+              {!isDead && phase === 'discard' && drawn != null && '牌効率を考えて、いらない牌を切りましょう。'}
+              {!isDead && phase === 'discard' && drawn == null && 'テンパイ！ ロンできます。'}
             </p>
 
             <div className="practice-actions">
-              {phase === 'draw' && drawsLeft > 0 && (
+              {!isDead && phase === 'draw' && (
                 <button className="primary-btn" onClick={draw}>
-                  ツモる（残り{drawsLeft}）
+                  ツモる
                 </button>
               )}
-              {phase === 'discard' && (
+              {!isDead && phase === 'discard' && drawn != null && (
                 <>
                   <button
                     className="primary-btn"
@@ -208,14 +225,12 @@ export default function PracticeTraining() {
                   >
                     この牌を切る
                   </button>
-                  {drawn && (
-                    <button className="ghost-btn" onClick={() => discard(drawn)}>
-                      ツモ切り
-                    </button>
-                  )}
+                  <button className="ghost-btn" onClick={() => discard(drawn)}>
+                    ツモ切り
+                  </button>
                 </>
               )}
-              {phase === 'dead' && (
+              {isDead && (
                 <button className="primary-btn" onClick={() => reset()}>
                   もう一度
                 </button>
@@ -233,7 +248,7 @@ export default function PracticeTraining() {
                   )}
                   {ronReady && (
                     <button className="primary-btn" onClick={declareRon}>
-                      ロン（{'他家の捨て牌で和了'}）
+                      ロン（他家の捨て牌で和了）
                     </button>
                   )}
                 </div>
@@ -263,9 +278,7 @@ export default function PracticeTraining() {
 
       {phase === 'agari' && agariResult && !agariResult.valid && (
         <div className="card">
-          <p className="hint">
-            この手には役がありません（アガれません）。× 印の不要牌を切って手を進めましょう。
-          </p>
+          <p className="hint">この形では役がなくアガれません。もう一度、牌効率を意識して進めましょう。</p>
           <button className="primary-btn" onClick={() => reset()}>
             もう一度
           </button>
