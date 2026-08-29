@@ -395,6 +395,8 @@ export function scoreChoices(correctTotal: number, rng: Rng = mulberry32(correct
       distractors.push(v);
     }
   }
-  // 正解を先頭に固定してから n 件に切る → 正解が落ちない
-  return [correctTotal, ...shuffle(rng, distractors)].slice(0, n).sort((a, b) => a - b);
+  // 正解を先頭に固定してから n 件に切る → 正解が落ちない。
+  // 最後にもう一度シャッフルして、正解の並び位置を毎回散らす（昇順固定だと位置で当てられる）
+  const picked = [correctTotal, ...shuffle(rng, distractors)].slice(0, n);
+  return shuffle(rng, picked);
 }

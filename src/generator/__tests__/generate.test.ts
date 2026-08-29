@@ -139,12 +139,26 @@ describe('追加役が出題に現れる', () => {
 });
 
 describe('scoreChoices', () => {
-  it('正解を必ず含み、指定個数を返す', () => {
+  it('正解を必ず含み、指定個数を返す（重複なし）', () => {
     const rng = mulberry32(1);
     const choices = scoreChoices(3900, rng, 6);
     expect(choices).toContain(3900);
     expect(choices).toHaveLength(6);
-    expect([...choices]).toEqual([...choices].sort((a, b) => a - b));
+    expect(new Set(choices).size).toBe(6);
+  });
+
+  it('正解の並び位置が固定されず散らばる', () => {
+    const positions = new Set<number>();
+    for (const level of [1, 2, 3, 4, 5, 6]) {
+      for (let i = 0; i < 60; i++) {
+        const p = generateScoreProblem(level, level * 999 + i);
+        const total = p.result.score.total;
+        const choices = scoreChoices(total, mulberry32(hashId(p.id)));
+        positions.add(choices.indexOf(total));
+      }
+    }
+    // 6 通りの位置すべてに正解が現れる（昇順固定なら中央付近に偏る）
+    expect(positions.size).toBe(6);
   });
 
   it('ラダー外の点数でも正解を含む', () => {
